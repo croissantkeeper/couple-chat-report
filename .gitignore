@@ -2,9 +2,11 @@
 data/
 output/
 output*/
+demo/
 *.zip
 profiles/*
 !profiles/example.yaml
+!profiles/starter.yaml
 examples/synthetic/messages.csv
 
 __pycache__/

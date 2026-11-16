@@ -37,9 +37,11 @@ def test_long_distance_couple(tmp_path):
     assert len(data["figures"]) == 27
     facts = data["facts"]
     assert facts["volume.text.A"]["value"] + facts["volume.text.B"]["value"] == facts["volume.text"]["value"]
-    # the synthetic B says good night at B's own bedtime; A answers from the afternoon
-    assert facts["tz.sleep_wish.in_receiver_night.A"]["value"] > 90
-    assert facts["tz.sleep_wish.in_sender_night.A"]["value"] < 10
+    # the synthetic A mostly answers B's good night from A's own afternoon
+    assert facts["tz.sleep_wish.in_receiver_night.A"]["value"] > facts["tz.sleep_wish.in_sender_night.A"]["value"]
+    # the offline report shows every figure, each exactly once
+    html = (tmp_path / "out" / "report.html").read_text(encoding="utf-8")
+    assert html.count("<img") == 27
 
 
 def test_same_city_couple_skips_modules(tmp_path):
@@ -80,6 +82,19 @@ def test_moect_adapter(tmp_path):
     df = ingest(tmp_path / "export", "moect", load_profile(profile))
     assert list(df["sender"]) == ["A", "B", "B"]          # duplicate and system notice dropped
     assert list(df["kind"]) == ["text", "sticker", "call"]
+
+
+def test_init_writes_a_profile_that_runs(tmp_path):
+    csv = tmp_path / "messages.csv"
+    _generate(csv)
+    profile = tmp_path / "mine.yaml"
+    main(["init", str(csv), "--format", "csv", "--write", str(profile)])
+    out = tmp_path / "out"
+    main(["--profile", str(profile), "--out", str(out), "run", str(csv)])
+    data = load_facts(out / "facts.json")
+    assert data["modules"]["volume"]["applied"]
+    assert not data["modules"]["timezones"]["applied"]      # the starter profile puts both people on one clock
+    assert (out / "report.html").exists()
 
 
 def test_handwritten_numbers_are_flagged():

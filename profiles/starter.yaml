@@ -1,0 +1,37 @@
+# 由 couplechat init 生成的起步配置。带 ← 的地方需要你改；其余可以先不动。
+# 这个文件默认不会进 git。完整写法见 profiles/example.yaml。
+
+participants:
+  A:
+    label: 甲                          # ← 报告里显示的名字
+    source_names: [__SENDER_A__]        # 导出里这个人的名字（init 自动填好）
+    default_timezone: __TZ_A__          # ← 这个人通常所在的时区，如 Asia/Shanghai、America/Chicago、Europe/Berlin
+    # locations:                        # 可选：这个人换过城市或时区时填写；日期含首尾
+    #   - {city: 上海, timezone: Asia/Shanghai, first: 2025-03-01, last: 2025-03-20}
+    #   - {city: 柏林, timezone: Europe/Berlin, first: 2025-03-21, last: 2025-05-31}
+  B:
+    label: 乙                          # ←
+    source_names: [__SENDER_B__]
+    default_timezone: __TZ_B__          # ←
+
+reference_timezone: __TZ_REF__          # 全局日历用哪个时区
+
+milestones: []                          # ← 可选：关系节点，按日期升序
+#  - {key: met, label: 认识, date: 2025-03-01}
+#  - {key: together, label: 确认关系, date: 2025-04-01}
+
+context: []                             # 可选：想让模型知道的背景，一行一条
+#  - 语音通话通常持续一小时以上。
+
+lexicons: {}                            # 可选：追加你们自己的词，例如 affection: [某个昵称]
+
+session_gap_minutes: 60
+
+story:
+  language: zh
+  tone: 温暖、具体，第三人称
+  model: claude-opus-5-5
+
+privacy:
+  send_vocabulary: false                # 是否允许把高频词、口头禅发给大模型
+  send_context: true

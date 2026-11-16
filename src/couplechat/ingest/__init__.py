@@ -33,6 +33,8 @@ def ingest(path: str | Path, fmt: str, profile: Profile) -> pd.DataFrame:
     df = df.dropna(subset=["sender"]).copy()
     df["kind"] = df["kind"].where(df["kind"].isin(KINDS), "other")
     df["text"] = df["text"].fillna("").astype(str)
+    if not pd.api.types.is_datetime64_any_dtype(df["ts"]):
+        df["ts"] = pd.to_datetime(df["ts"], utc=True, format="ISO8601")   # accepts timestamps with or without fractions
     df["ts"] = pd.to_datetime(df["ts"], utc=True)
     df = df.sort_values("ts").drop_duplicates(subset=["ts", "sender", "kind", "text"]).reset_index(drop=True)
     df.attrs["dropped_unknown_sender"] = unknown

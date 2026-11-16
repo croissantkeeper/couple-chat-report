@@ -15,6 +15,9 @@ from ..profile import ROOT, Profile
 
 PROMPTS = ROOT / "prompts"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
+CATALOGUE_MARK = "<!--figure-catalogue-->"   # generated captions follow; the hand-typed-number check stops here
+GROUP_TITLES = {"volume": "聊天量与对称性", "rhythm": "作息节奏", "timezones": "两套时钟", "sessions": "会话与回应", "language": "语言",
+                "greetings": "问候", "relationship": "关系阶段", "calls": "通话", "itinerary": "行程"}
 
 
 def _ask(profile: Profile, system: str, user: str) -> str:
@@ -88,4 +91,18 @@ def offline_draft(data: dict) -> str:
 
     text = re.sub(r"<!--if:(\w+)-->(.*?)<!--end-->", keep, text, flags=re.S)
     labels = data["meta"]["labels"]
-    return text.replace("【A】", labels["A"]).replace("【B】", labels["B"])
+    text = text.replace("【A】", labels["A"]).replace("【B】", labels["B"])
+    # Then every figure, group by group, each with the sentence that says what it shows.
+    used = set(re.findall(r"\[\[figure:(\w+)\]\]", text))
+    parts = [text.rstrip(), "", CATALOGUE_MARK, "", "## 全部图件", "", "下面按功能组列出本次生成的全部图件，每张图下方说明它能看出什么。"]
+    for group, title in GROUP_TITLES.items():
+        figures = [f for f in data["figures"] if f["module"] == group and f["id"] not in used]
+        if not figures:
+            continue
+        parts += ["", f"### {title}"]
+        reason = data["modules"].get(group, {}).get("reason")
+        if reason:
+            parts += ["", f"> 口径：{reason}"]
+        for f in figures:
+            parts += ["", f"**{f['title']}**　{f['shows']}", "", f"[[figure:{f['id']}]]"]
+    return chr(10).join(parts) + chr(10)
