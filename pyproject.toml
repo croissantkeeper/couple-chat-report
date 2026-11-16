@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "couplechat"
+version = "0.1.0"
+description = "Turn a two-person chat export into a data-backed, LLM-narrated report."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["pandas>=2.0", "pyyaml>=6.0", "matplotlib>=3.7", "pillow", "tzdata"]
+
+[project.optional-dependencies]
+story = ["anthropic"]      # only needed for the LLM stages
+zh = ["jieba"]             # better Chinese word segmentation
+dev = ["pytest"]
+
+[project.scripts]
+couplechat = "couplechat.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

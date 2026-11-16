@@ -1,0 +1,13 @@
+# 问候与祝愿的匹配规则（正则，忽略大小写）。按需增删；label 会出现在图表里，键名用于 fact 编号。
+morning:
+  label: 晨间问候
+  pattern: '早上好(?![饿困累冷热])|早安|^\s*(?:早[呀啊哦哇]|早好|早{2,})(?:[，。！!\s]|$)|good\s*morning'
+evening:
+  label: 晚间问候
+  pattern: '晚上好(?![饿困累冷热像])|^\s*晚好|good\s*evening'
+sleep_wish:
+  label: 睡眠祝愿
+  pattern: '晚安|好梦|睡个好觉|早点睡|sweet dreams|sleep well|good\s*night'
+day_wish:
+  label: 白天祝愿
+  pattern: 'have\s+a\s+(?:nice|good|great|lovely)\s+day|(?:祝|希望).{0,24}(?:今天|一天|工作|学习|上课).{0,16}(?:顺利|开心|愉快)|今天也加油'

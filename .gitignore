@@ -1,0 +1,14 @@
+# Real chat data and anything derived from it must never be committed.
+data/
+output/
+output*/
+*.zip
+profiles/*
+!profiles/example.yaml
+examples/synthetic/messages.csv
+
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.env

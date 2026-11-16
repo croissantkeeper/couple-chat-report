@@ -1,0 +1,45 @@
+# 一对情侣的全部“情况”。本文件是虚构示例，可直接配合 examples/synthetic 运行。
+# 复制为 profiles/<你的名字>.yaml 后修改；profiles/ 下除 example.yaml 外默认不进 git。
+
+participants:
+  A:
+    label: 阿橘                # 报告里显示的名字
+    source_names: [A, 阿橘]    # 导出文件里这个人可能出现的名字或 ID
+    default_timezone: Asia/Shanghai
+    locations:                 # 可选；日期为该时区的本地日期，含首尾
+      - {city: 上海, timezone: Asia/Shanghai, first: 2025-03-01, last: 2025-03-20}
+      - {city: 柏林, timezone: Europe/Berlin, first: 2025-03-21, last: 2025-05-31}
+  B:
+    label: 小鲸
+    source_names: [B, 小鲸]
+    default_timezone: Asia/Shanghai
+    locations:
+      - {city: 上海, timezone: Asia/Shanghai, first: 2025-03-01, last: 2025-04-10}
+      - {city: 成都, timezone: Asia/Shanghai, first: 2025-04-11, last: 2025-04-20}
+      - {city: 上海, timezone: Asia/Shanghai, first: 2025-04-21, last: 2025-05-31}
+
+reference_timezone: Asia/Shanghai   # 全局日历用哪个时区
+
+milestones:                    # 可选；用于划分阶段，按日期升序
+  - {key: met, label: 认识, date: 2025-03-01}
+  - {key: apart, label: 开始异地, date: 2025-03-21}
+  - {key: together, label: 确认关系, date: 2025-04-01}
+
+context:                       # 当事人补充的背景，会原样交给大模型
+  - 语音通话通常持续一小时以上。
+  - 两人都是学生。
+
+lexicons:                      # 在 lexicons/default.yaml 基础上追加或覆盖
+  affection: [宝宝, 想你, 喜欢你]
+
+session_gap_minutes: 60
+
+story:
+  language: zh
+  tone: 一本正经地陈述可爱结论的论文体，第三人称，不直接对读者说话
+  model: claude-opus-5-5
+  # compare_windows: [[2025-05-03, 2025-05-16], [2025-05-17, 2025-05-30]]   # 可选；“近期对照”的两个窗口，默认取最后 28 天
+
+privacy:
+  send_vocabulary: false       # 是否允许把高频词、口头禅发给大模型
+  send_context: true           # 是否把上面的 context 发给大模型
