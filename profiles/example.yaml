@@ -4,7 +4,7 @@
 participants:
   A:
     label: 阿橘                # 报告里显示的名字
-    source_names: [A, 阿橘]    # 导出文件里这个人可能出现的名字或 ID
+    source_names: [A, 阿橘]    # 导出文件里这个人可能出现的名字或 ID；Moect 导出填 self（导出者）或 other
     default_timezone: Asia/Shanghai
     locations:                 # 可选；日期为该时区的本地日期，含首尾
       - {city: 上海, timezone: Asia/Shanghai, first: 2025-03-01, last: 2025-03-20}

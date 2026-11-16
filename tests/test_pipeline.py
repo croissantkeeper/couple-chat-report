@@ -60,6 +60,28 @@ def test_vocabulary_is_not_sent_by_default(tmp_path):
     assert "vocab." in json.dumps(llm_payload(data, send_vocabulary=True), ensure_ascii=False)
 
 
+def test_moect_adapter(tmp_path):
+    from couplechat.ingest import ingest
+    from couplechat.profile import load_profile
+
+    messages = [
+        {"create_time": 1741000000, "is_sender": True, "kind": "text", "text": "你好", "server_id": "1", "session": "s"},
+        {"create_time": 1741000060, "is_sender": False, "kind": "emoji", "text": "", "server_id": "2", "session": "s"},
+        {"create_time": 1741000060, "is_sender": False, "kind": "emoji", "text": "", "server_id": "2", "session": "s"},
+        {"create_time": 1741000120, "is_sender": False, "kind": "voip", "text": "", "server_id": "3", "session": "s"},
+        {"create_time": 1741000180, "is_sender": True, "kind": "text", "text": "你撤回了一条消息", "server_id": "4", "session": "s"},
+    ]
+    folder = tmp_path / "export" / "chat"
+    folder.mkdir(parents=True)
+    (folder / "c000001.js").write_text("window.__wxChunk=" + json.dumps(messages, ensure_ascii=False) + ";", encoding="utf-8")
+    text = (ROOT / "profiles" / "example.yaml").read_text(encoding="utf-8")
+    profile = tmp_path / "moect.yaml"
+    profile.write_text(text.replace("source_names: [A, 阿橘]", "source_names: [self]").replace("source_names: [B, 小鲸]", "source_names: [other]"), encoding="utf-8")
+    df = ingest(tmp_path / "export", "moect", load_profile(profile))
+    assert list(df["sender"]) == ["A", "B", "B"]          # duplicate and system notice dropped
+    assert list(df["kind"]) == ["text", "sticker", "call"]
+
+
 def test_handwritten_numbers_are_flagged():
     data = {"facts": {"volume.text": {"value": 10, "unit": "", "desc": ""}}, "figures": []}
     assert check_draft("共 {{volume.text}} 条。", data) == []

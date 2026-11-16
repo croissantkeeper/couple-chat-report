@@ -1,6 +1,8 @@
-# facts.json 格式
+# facts.json format
 
-`facts.json` 是统计层与叙述层之间唯一的接口。叙述层（大模型和模板）只能引用这里的数字。
+**English** | [中文](facts-schema.zh-CN.md)
+
+`facts.json` is the only interface between the statistics and the narrative. The narrative layer (the model and the templates) may cite numbers only from here.
 
 ```json
 {
@@ -27,29 +29,32 @@
 }
 ```
 
-## 字段
+Descriptions (`desc`, `reason`, `shows`, `title`) are generated in Chinese.
 
-- **meta**：窗口起止、显示名、会话阈值，以及阶段和行程的划分结果。
-- **modules**：每个可选模块是否启用及原因。`reason` 同时用来写明口径限制，模型会读到它。
-- **figures**：图件目录。`shows` 用一句话说明这张图能看出什么，供模型选图。
-- **facts**：键为编号，值包含：
-  - `value`：整数、小数、字符串（如日期）。
-  - `unit`：`%` 表示数值已是百分数，渲染时自动加百分号；其他单位只作说明。
-  - `desc`：口径说明，写清统计的是什么、不是什么。
-  - `module`：来自哪个模块。
-  - `sensitive`：为 `true` 时默认不发送给模型（目前是词频类）。
+## Fields
 
-## 编号约定
+- **meta**: the first and last day, display names, the session threshold, and the resulting phases and itinerary segments.
+- **modules**: whether each analysis group was applied, and why. `reason` also states the limits of what the numbers mean, and the model reads it.
+- **figures**: the figure catalogue. `shows` says in one sentence what the figure reveals, so the model can choose figures.
+- **facts**: keyed by id. Each value has:
+  - `value`: an integer, a decimal, or a string such as a date.
+  - `unit`: `%` means the value is already a percentage and the renderer appends the sign; other units are informational.
+  - `desc`: the definition, saying what is counted and what is not.
+  - `module`: the group it came from.
+  - `sensitive`: when `true`, the fact is not sent to the model by default (currently the vocabulary facts).
 
-- 用点分层：`领域.指标.人`，例如 `sessions.start_share.A`。
-- 涉及某个人时以 `.A` 或 `.B` 结尾；显示名在 `meta.labels`。
-- 阶段类用 profile 里节点的 `key`：`phase.together.daily_median`。
-- 行程类用人和段号：`itinerary.B.seg2.daily_median`。
-- 编号一旦发布尽量不改，正文里的占位符依赖它。
+## Id conventions
 
-## 在正文中引用
+- Dot-separated levels: `area.metric.person`, for example `sessions.start_share.A`.
+- Ids about one person end in `.A` or `.B`; display names are in `meta.labels`.
+- Phase facts use the milestone `key` from the profile: `phase.together.daily_median`.
+- Itinerary facts use the person and segment number: `itinerary.B.seg2.daily_median`.
+- Ids contain only letters, digits, underscores and dots.
+- Avoid renaming an id once published; placeholders in drafts depend on it.
 
-- 数字：`{{volume.text.A}}`
-- 图件：单独一行的 `[[figure:daily_trend]]`
+## Citing in a draft
 
-渲染规则：整数加千分位，小数保留一位，`unit` 为 `%` 的加百分号。
+- A number: `{{volume.text.A}}`
+- A figure, on a line of its own: `[[figure:daily_trend]]`
+
+Rendering: integers get thousands separators, decimals keep one place, and values whose `unit` is `%` get a percent sign.

@@ -1,60 +1,92 @@
 # couplechat
 
-把两个人的聊天导出，变成一份有数据依据、由大模型执笔的报告。
+**English** | [中文](README.zh-CN.md)
 
-每对情侣的情况都不一样：有人异地跨时区，有人同城；有人常出差，有人不打电话。这个项目把“这对情侣的情况”“通用的统计方法”和“怎么讲故事”分成三层，换一对情侣只需要换一份配置。
+Turn a two-person chat export into a report that is backed by data and written by a language model.
 
-## 设计
+Every couple is different. Some live in different time zones and some in the same city; some travel a lot; some never call. This project separates three things: the couple's own situation, the general statistics, and the storytelling. Analysing a different couple only takes a different profile file.
+
+The tool was built for Chinese-language WeChat chats, so the word lists, greeting rules, prompts and figure labels are in Chinese. The pipeline itself is language-neutral; see [Extending](#extending).
+
+## Gallery
+
+Every figure below is drawn from fictional data produced by `examples/synthetic/generate.py`. The two people, 阿橘 (A) and 小鲸 (B), do not exist. All 27 figures are listed in [docs/figures.md](docs/figures.md).
+
+**Relationship timeline**: daily chat volume against the relationship milestones, and how often affectionate words appear in each phase.
+
+![Relationship timeline](docs/images/phase_timeline.png)
+
+**Two clocks**: both people's chat hours aligned to the same instant, showing when in each person's day they meet.
+
+![Two clocks, one chat window](docs/images/two_clocks.png)
+
+**How the chat window settled**: the share of each week's text by hour; dashed lines mark a change in the time difference.
+
+![Chat hours week by week](docs/images/weekly_hours.png)
+
+**Who speaks first**: each person's share of conversation starts per phase, and the hour they usually start at.
+
+![Who starts a conversation, and when](docs/images/session_starts.png)
+
+**Itinerary and chat volume**: the background colour is the city someone was in, showing whether chat volume moves with location.
+
+![Itinerary and chat volume](docs/images/itinerary.png)
+
+**Chat calendar**
+
+![Chat calendar](docs/images/calendar.png)
+
+## Design
 
 ```
-导出文件 ──ingest──▶ 统一消息表 ──analyses（九个功能组）──▶ facts.json + 图件 + 表格
-                                                          │
-profile.yaml（称呼、行程、节点、背景、文风）──────────────┤
-                                                          ▼
-                                   story：提故事线 ▶ 写正文 ▶ 审稿
-                                                          ▼
-                                   render：填入数字、检查 ▶ report.md
+export ──ingest──▶ canonical message table ──analyses (nine groups)──▶ facts.json + figures + tables
+                                                                    │
+profile.yaml (names, itinerary, milestones, context, tone) ─────────┤
+                                                                    ▼
+                                   story: propose storylines ▶ write ▶ review
+                                                                    ▼
+                                   render: fill in numbers, check ▶ report.md
 ```
 
-- **profile**（`profiles/*.yaml`）：因人而异的一切。两人的显示名、每人的行程与时区、关系节点、自定义词表、当事人补充的背景、文风。
-- **ingest**（`src/couplechat/ingest/`）：每种导出格式一个适配器，输出统一的消息表。后面的代码只认这张表。
-- **analyses**（`src/couplechat/analyses/`）：按功能分成九组，每组负责自己的数字、图件和表格，只计算，不解读。每组先判断自己是否适用于这对情侣；同城情侣会得到“时差：未启用”，而不是报错。
-- **facts.json**：报告可以引用的全部数字，每个数字有编号和口径说明。格式见 [docs/facts-schema.md](docs/facts-schema.md)。
-- **story**（`src/couplechat/story/`，提示词在 `prompts/`）：三次模型调用。先提出两三条候选故事线，由你挑选；再按选定的故事线写正文；最后审稿。
-- **render**（`src/couplechat/render/`）：把占位符换成数字，并检查正文里有没有手写的数字。
+- **profile** (`profiles/*.yaml`): everything that differs between couples. Display names, each person's itinerary and time zones, relationship milestones, extra word lists, background supplied by the couple, and the tone of the report.
+- **ingest** (`src/couplechat/ingest/`): one adapter per export format, each producing the same message table. Everything downstream reads only that table.
+- **analyses** (`src/couplechat/analyses/`): nine groups by function. Each group owns its numbers, figures and tables; it computes and does not interpret. Each group first decides whether it applies to this couple, so a same-city couple gets "timezones: not applied" instead of an error.
+- **facts.json**: every number the report may cite, each with an id and a definition. See [docs/facts-schema.md](docs/facts-schema.md).
+- **story** (`src/couplechat/story/`, prompts in `prompts/`): three model calls. The first proposes two or three storylines for you to choose from, the second writes the report for the chosen one, and the third reviews it.
+- **render** (`src/couplechat/render/`): replaces placeholders with numbers and checks the draft for numbers typed by hand.
 
-### 数字不由模型书写
+### The model never writes numbers
 
-模型写正文时不直接写数字，只写占位符，例如 `共发出 {{volume.text.A}} 条文字`，由渲染程序填入。这样数字不会被编造，重新统计后正文也不必重写。`render` 会标出未知的编号和手写的多位数字。
+When the model writes the report it does not type numbers. It writes placeholders such as `{{volume.text.A}}`, and the renderer fills them in. Numbers therefore cannot be invented, and the text does not need rewriting when the statistics are rerun. `render` flags unknown ids and hand-typed multi-digit numbers.
 
-## 九个功能组，27 张图
+## Nine analysis groups, 27 figures
 
-| 功能组 | 回答的问题 | 图件 | 适用条件 |
+| Group | Question it answers | Figures | Applies when |
 |---|---|---|---|
-| `volume` 聊天量与对称性 | 聊了多少、谁说得多、用什么媒介 | 每日趋势、月度分布、逐周占比、日历、消息类型、单条长度与每日字数 | 总是 |
-| `rhythm` 作息节奏 | 各自在一天、一周的什么时候聊 | 星期×小时、逐周小时分布、小时均值与波动、深夜比例 | 总是 |
-| `timezones` 两套时钟 | 两人在各自一天的什么时候相遇 | 双时钟对照、时差变化前后 | 时钟不同的天数足够多 |
-| `sessions` 会话与回应 | 谁先开口、聊多久、接话多快 | 会话形态、会话发起、接话节奏、完整等待分布 | 总是 |
-| `language` 语言 | 各自的口头禅、共同的词 | 词云、共同高频词、特征词、完整短句、词组逐周出现率 | 总是（内容敏感） |
-| `greetings` 问候 | 早安晚安按谁的时间发、怎样被接住 | 问候的双时钟分布、问候配对与晚安方向 | 匹配到足够多的问候 |
-| `relationship` 关系阶段 | 关系节点前后有什么变化、最近怎样 | 阶段时间线、近期等长窗口对照 | profile 有关系节点；天数足够 |
-| `calls` 通话 | 文字之外有多少通话 | 逐周通话事件 | 导出里有通话事件 |
-| `itinerary` 行程 | 聊天量是否随所在城市起伏 | 行程与聊天量 | profile 有多段行程 |
+| `volume` | How much was said, by whom, in which media | daily trend, monthly distribution, weekly share, calendar, message types, length and daily balance | always |
+| `rhythm` | When in the day and week each person chats | weekday × hour, weekly hours, hourly spread, late night | always |
+| `timezones` | When in each person's day the two meet | two clocks, before and after a clock change | the clocks differ on enough days |
+| `sessions` | Who starts, how long, how fast the replies | session shape, session starts, reply rhythm, all gaps | always |
+| `language` | Each person's catchphrases and the words they share | word clouds, shared words, distinctive words, catchphrases, word lists by week | always (sensitive content) |
+| `greetings` | Whose clock a good night follows, and how it is answered | greeting clocks, greeting pairs and good-night direction | enough greetings are matched |
+| `relationship` | What changed around the milestones, and how things are lately | phase timeline, recent comparison | the profile has milestones; enough days |
+| `calls` | How much happens in calls and not in text | weekly call events | the export has call events |
+| `itinerary` | Whether chat volume moves with where someone was | itinerary | the profile lists more than one location |
 
-每张图的编号和说明见 [docs/figures.md](docs/figures.md)。统计表输出在 `output/tables/`。
+Figure ids and descriptions are in [docs/figures.md](docs/figures.md). Tables are written to `output/tables/`.
 
-## 隐私
+## Privacy
 
-聊天记录属于两个人。使用前请确认双方都同意。
+A chat history belongs to two people. Make sure both agree before using this.
 
-- **默认只把聚合统计发给模型。** 原始消息不离开本机；发送内容由 `facts.llm_payload` 决定，可以先打开 `output/facts.json` 看一遍。
-- **词频默认不发送。** 高频词和口头禅本身就是隐私，相关 facts 标记为 `sensitive`，只有在 profile 里设置 `privacy.send_vocabulary: true` 才会进入模型输入。
-- **仓库里没有真实数据。** `.gitignore` 排除了 `data/`、`output/` 和除示例外的所有 profile。示例数据由 `examples/synthetic/generate.py` 随机生成，人物与内容均为虚构。
-- **profile 里的内容会被发送。** 显示名、关系节点、行程中的城市和日期，以及 `context` 里的背景（可用 `privacy.send_context: false` 关闭）会进入模型输入。不想发送的信息不要写进 profile。
-- **图件和表格留在本机。** 词云、口头禅等图件会显示真实的词，`output/tables/` 里有词频表；分享前请自己过目。
-- 报告生成后是否分享、分享给谁，由你们自己决定。
+- **Only aggregates are sent to the model by default.** Raw messages never leave your machine. What is sent is decided by `facts.llm_payload`; you can read `output/facts.json` first.
+- **Word frequencies are not sent by default.** Frequent words and catchphrases are private in themselves. Those facts are flagged `sensitive` and reach the model only if the profile sets `privacy.send_vocabulary: true`.
+- **The repository holds no real data.** `.gitignore` excludes `data/`, `output/` and every profile except the example. The example data is generated at random by `examples/synthetic/generate.py`; the people and the content are fictional.
+- **What you write in the profile is sent.** Display names, milestones, the cities and dates of the itinerary, and the `context` lines (switch them off with `privacy.send_context: false`) go into the model input. Leave out anything you do not want sent.
+- **Figures and tables stay on your machine.** Word clouds and catchphrase charts show real words, and `output/tables/` holds a vocabulary table. Look through them before sharing.
+- Whether to share the finished report, and with whom, is up to the two of you.
 
-## 快速开始
+## Quick start
 
 ```bash
 pip install -e ".[story,zh]"
@@ -76,51 +108,67 @@ couplechat story --offline
 couplechat render
 ```
 
-`--offline` 使用固定模板，不调用模型，适合先确认流程能跑通。
+`--offline` uses a fixed template and calls no model. Use it to confirm that the pipeline runs.
 
-### 调用大模型
+### Calling the model
 
-需要 Anthropic API 凭据（环境变量 `ANTHROPIC_API_KEY`）。默认模型为 `claude-opus-5-5`，可在 profile 的 `story.model` 中修改。请求启用了服务端回退：如果模型拒绝某次请求，API 会自动在备用模型上重试。
+You need Anthropic API credentials (the `ANTHROPIC_API_KEY` environment variable). The default model is `claude-opus-5-5`; change it in the profile under `story.model`. Requests enable server-side fallback: if the model declines a request, the API retries it on a fallback model.
 
 ```bash
 couplechat story
 ```
 
-列出候选故事线后，挑一条并写正文，同时审稿：
+After the candidate storylines are listed, pick one, write the report and review it:
 
 ```bash
 couplechat story --pick 1 --review
 ```
 
-对稿子有意见时，把意见传回去重写：
+If you want changes, pass your comments back for a rewrite:
 
 ```bash
-couplechat story --pick 1 --feedback "第二章太长，压缩一半"
+couplechat story --pick 1 --feedback "Chapter 2 is too long; cut it by half"
 ```
 
 ```bash
 couplechat render --strict
 ```
 
-### 用自己的数据
+### Using your own data
 
-1. 复制 `profiles/example.yaml` 为 `profiles/<名字>.yaml`，改成你们的情况。
-2. 把导出文件放进 `data/`。通用 CSV 格式只需要四列：`timestamp, sender, kind, text`。其他格式见 `src/couplechat/ingest/`。
-3. 运行时带上 `--profile` 和 `--out`：
+1. Copy `profiles/example.yaml` to `profiles/<name>.yaml` and edit it to match the two of you.
+2. Put the export under `data/`. Supported formats are listed below.
+3. Run with `--profile` and `--out`:
 
 ```bash
-couplechat --profile profiles/<名字>.yaml --out output/<名字> analyze data/<导出文件> --format csv
+couplechat --profile profiles/<name>.yaml --out output/<name> analyze data/<export> --format csv
 ```
 
-## 扩展
+### Supported export formats
 
-- **新的导出格式**：在 `ingest/` 里写一个返回 `ts, sender, kind, text` 四列的函数，并登记到 `ADAPTERS`。
-- **新的功能组**：在 `analyses/` 里新建一个文件，写 `run(ctx)`：开头用 `ctx.facts.module(name, applied, reason)` 说明是否适用，再用 `ctx.facts.add(...)` 添加数字，并把它加进 `analyses/__init__.py` 的 `ANALYSES`。
-- **新的图**：在所属功能组里画好后调用 `ctx.figure(fig, 编号, 标题, 组名, shows)`。其中的 `shows` 是给模型看的一句话说明。
-- **新的词表或问候规则**：改 `lexicons/` 下的文件，或在 profile 的 `lexicons` 里追加。
-- **新的文风或语言**：改 profile 里的 `story.tone` 和 `story.language`，或直接改 `prompts/` 下的提示词。
+| `--format` | Source | Notes |
+|---|---|---|
+| `moect` | WeChat history exported with [Moect](https://github.com/mofan6/Moect) | Pass the export folder. Senders are reported as `self` (the exporting account) and `other`; assign them to the two people under `source_names` in the profile |
+| `csv` | Generic CSV | Four columns: `timestamp, sender, kind, text`. The easiest target to convert other tools' output into |
+| `wechat-json` | JSON from other tools | A template; adjust the field names to your tool |
 
-## 测试
+Example with a Moect export:
+
+```bash
+couplechat --profile profiles/<name>.yaml --out output/<name> analyze data/<moect-export-folder> --format moect
+```
+
+This project only reads files you have exported yourself. It does not export chat histories and is not responsible for that step; follow the export tool's own instructions and licence.
+
+## Extending
+
+- **A new export format**: write a function in `ingest/` that returns the four columns `ts, sender, kind, text`, and register it in `ADAPTERS`.
+- **A new analysis group**: add a file under `analyses/` with `run(ctx)`. Start by calling `ctx.facts.module(name, applied, reason)` to say whether it applies, add numbers with `ctx.facts.add(...)`, and append the module to `ANALYSES` in `analyses/__init__.py`.
+- **A new figure**: draw it inside its group and call `ctx.figure(fig, id, title, group, shows)`. `shows` is the one-sentence description the model reads.
+- **New word lists or greeting rules**: edit the files under `lexicons/`, or add to `lexicons` in the profile.
+- **Another tone or language**: change `story.tone` and `story.language` in the profile, or edit the prompts under `prompts/`. For a non-Chinese chat you will also want to replace the word lists, the greeting rules and the stop words under `lexicons/`.
+
+## Tests
 
 ```bash
 pip install -e ".[dev]"
@@ -130,16 +178,17 @@ pip install -e ".[dev]"
 pytest
 ```
 
-测试只使用合成数据，不联网。
+The tests use synthetic data only and make no network calls.
 
-## 已知限制
+## Known limitations
 
-- 目前输出 Markdown；LaTeX 或 HTML 排版尚未实现。
-- 没有安装 `jieba` 时，中文词频退化为相邻两字切分，语言组的图会很粗糙，建议安装。
-- 非整点时差（如 5.5 小时）在双时钟图中按四舍五入对齐。
-- `wechat-json` 适配器是模板，字段名需要按你使用的导出工具调整。
-- 通话事件通常只有时间戳，没有时长和接通状态。
+- Figure labels, word lists, greeting rules and prompts are in Chinese.
+- Output is Markdown; LaTeX or HTML layout is not implemented yet.
+- Without `jieba`, Chinese word counts fall back to overlapping two-character pieces and the language figures become rough. Installing it is recommended.
+- A time difference that is not a whole number of hours (5.5, for example) is rounded when the two clocks are aligned.
+- The `moect` adapter follows the file structure Moect produces today and may need updating if that tool changes its format. The `wechat-json` adapter is only a template.
+- Call events usually carry only a timestamp, with no duration and no connection status.
 
-## 许可
+## Licence
 
 MIT

@@ -17,9 +17,10 @@ import pandas as pd
 
 from ..profile import Profile
 from .generic_csv import read_generic_csv
+from .moect import read_moect
 from .wechat_json import read_wechat_json
 
-ADAPTERS = {"csv": read_generic_csv, "wechat-json": read_wechat_json}
+ADAPTERS = {"csv": read_generic_csv, "moect": read_moect, "wechat-json": read_wechat_json}
 KINDS = {"text", "quote", "sticker", "image", "voice", "video", "call", "other"}
 
 

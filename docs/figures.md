@@ -1,75 +1,77 @@
-# 图件索引
+# Figure index
 
-图件编号用于正文中的 `[[figure:编号]]`。每张图在 `facts.json` 的 `figures` 里还带有一句 `shows` 说明，供模型选图。
+**English** | [中文](figures.zh-CN.md)
 
-## volume 聊天量与对称性
+Figure ids are what the draft cites as `[[figure:id]]`. In `facts.json`, each figure also carries a one-sentence `shows` description that the model reads when choosing figures. Labels inside the figures are currently in Chinese.
 
-| 编号 | 内容 |
+## volume: how much, by whom, in which media
+
+| Id | Shows |
 |---|---|
-| `daily_trend` | 每日文字量与 7 日居中平均，竖线为关系节点 |
-| `monthly_distribution` | 各月每日文字量的中位数、四分位区间和均值 |
-| `weekly_share` | 每周两人在文字和全部记录中的占比 |
-| `calendar` | 月历形式的每日文字量 |
-| `message_types` | 文字、引用回复、表情包、图片等的占比 |
-| `length_and_balance` | 单条长度的累计分布；每天两人字符数的散点 |
+| `daily_trend` | Daily text volume with a centred 7-day mean; vertical lines mark milestones |
+| `monthly_distribution` | Median, interquartile range and mean of daily text volume for each month |
+| `weekly_share` | Each person's weekly share of text messages and of all records |
+| `calendar` | Daily text volume laid out as a calendar |
+| `message_types` | Shares of text, quoted replies, stickers, images and so on |
+| `length_and_balance` | Cumulative distribution of message length; scatter of the two people's daily characters |
 
-## rhythm 作息节奏
+## rhythm: each person's own clock
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `weekday_hour` | 星期 × 当地小时的发言强度 |
-| `weekly_hours` | 每周文字在各小时的占比，虚线为时差变化 |
-| `hourly_spread` | 各小时的均值、中位数和四分位区间 |
-| `late_night` | 各时差阶段的深夜文字占比与深夜天数占比 |
+| `weekday_hour` | Activity by weekday and local hour |
+| `weekly_hours` | Share of each week's text by hour; dashed lines mark a change in the time difference |
+| `hourly_spread` | Mean, median and interquartile range for each hour |
+| `late_night` | Share of text sent late at night and share of days with late-night text, per clock-gap stage |
 
-## timezones 两套时钟
+## timezones: the two clocks side by side
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `two_clocks` | 每个时差阶段一栏，两人的曲线对齐到同一时刻 |
-| `clock_change` | 最近一次时差变化前后各 14 天，在两套时钟上的分布 |
+| `two_clocks` | One panel per clock-gap stage, with both curves aligned to the same instant |
+| `clock_change` | The 14 days before and after the latest change in the time difference, on both clocks |
 
-## sessions 会话与回应
+## sessions: conversations and replies
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `session_shape` | 双人会话的跨度、记录数、切换次数的累计分布 |
-| `session_starts` | 各阶段谁先开口；发起会话的当地小时 |
-| `reply_rhythm` | 会话内的接话间隔，按接话者是否处于深夜分栏 |
-| `all_gaps` | 不按会话截断的全部说话人切换间隔 |
+| `session_shape` | Cumulative distributions of span, record count and speaker switches for two-person sessions |
+| `session_starts` | Who starts in each stage; the local hour at which each person starts |
+| `reply_rhythm` | Reply gaps inside a session, split by whether the replier was in the small hours |
+| `all_gaps` | All speaker-switch gaps, including those between sessions |
 
-## language 语言（内容敏感）
+## language: words (sensitive content)
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `word_clouds` | 两人各自的词云 |
-| `shared_words` | 共同高频词的镜像对照 |
-| `distinctive_words` | 每千词频率比对方高出最多的词 |
-| `catchphrases` | 整条消息只有这一句的短句排行 |
-| `lexicon_weekly` | 词表各类别的逐周出现率 |
+| `word_clouds` | A word cloud for each person |
+| `shared_words` | The most frequent words overall, mirrored for the two people |
+| `distinctive_words` | Words each person uses most in excess of the other, per thousand words |
+| `catchphrases` | Ranking of short phrases sent as a whole message |
+| `lexicon_weekly` | Weekly rate of each word-list category |
 
-## greetings 问候
+## greetings
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `greeting_clocks` | 四类问候在发送者时钟和接收者时钟下的小时分布 |
-| `greeting_pairs` | 先后两句问候的类型配对；睡眠祝愿落在谁的夜间 |
+| `greeting_clocks` | Hourly distribution of four greeting types on the sender's and the receiver's clock |
+| `greeting_pairs` | Which greeting types answer which; whose night a sleep wish lands in |
 
-## relationship 关系阶段
+## relationship: phases
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `phase_timeline` | 每日文字量与关系节点；各阶段的亲昵词出现率 |
-| `recent_comparison` | 最近两个等长窗口的文字量、会话跨度和会话数 |
+| `phase_timeline` | Daily text volume with milestones; affectionate-word rate per phase |
+| `recent_comparison` | Text volume, session span and session count in the two most recent equal windows |
 
-## calls 通话
+## calls
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `calls_weekly` | 每周通话事件记录数 |
+| `calls_weekly` | Call-event records per week |
 
-## itinerary 行程
+## itinerary
 
-| 编号 | 内容 |
+| Id | Shows |
 |---|---|
-| `itinerary` | 所在城市背景下的每日文字与通话；各行程段的典型日文字量 |
+| `itinerary` | Daily text and calls against a background of cities; typical daily volume per itinerary segment |
